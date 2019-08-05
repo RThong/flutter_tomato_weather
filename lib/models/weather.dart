@@ -227,3 +227,27 @@ class Weather7DaysInfo {
       _$Weather7DaysInfoFromJson(json);
   Map<String, dynamic> toJson() => _$Weather7DaysInfoToJson(this);
 }
+
+/**
+ * 实时天气信息的interface
+ */
+class WeatherNow {
+  final String img; // 天气图片
+  final String temp; // 温度
+  final String wS; // 风级
+  final String weather; // 天气
+  final String aqi; // 空气质量指数
+  final String quality; //空气质量
+  final String temp_day_c; // 最高气温
+  final String temp_night_c; // 最低气温
+
+  WeatherNow(
+      {this.img,
+      this.temp,
+      this.wS,
+      this.weather,
+      this.aqi,
+      this.quality,
+      this.temp_day_c,
+      this.temp_night_c});
+}
