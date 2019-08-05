@@ -6,7 +6,7 @@ const baseURL = 'https://aider.meizu.com/app/weather/listWeather';
 
 getWeather() async {
   Response response =
-      await dio.get(baseURL, queryParameters: {'cityIds': '101240101'});
+      await dio.get(baseURL, queryParameters: {'cityIds': '101210101'});
   return response.data;
   ;
 }
