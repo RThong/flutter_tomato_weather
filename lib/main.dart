@@ -9,7 +9,7 @@ import 'package:dio/dio.dart';
 import 'info.dart';
 import 'package:flutter_study/models/weather.dart';
 
-void main() async {
+void main() {
   runApp(new MyApp());
 }
 
@@ -37,6 +37,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   // WeatherInfo realTimeInfo;
   WeatherNow info;
+  List<Weather7DaysInfo> weather7daysInfo;
   bool isLoading = true;
 
   _getWeather() async {
@@ -44,16 +45,14 @@ class _HomePageState extends State<HomePage> {
     var b = await getWeather();
     WeatherRes weather = new WeatherRes.fromJson(b);
 
-    // print(weather);
-    WeatherNow info = _filterNowWeather(weather);
-    print(info);
     setState(() {
       this.isLoading = false;
-      this.info = info;
+      this.info = _filterNowWeather(weather);
+      this.weather7daysInfo = _filterWeekWeather(weather);
     });
   }
 
-  _filterNowWeather(WeatherRes res) {
+  WeatherNow _filterNowWeather(WeatherRes res) {
     WeatherNow b = new WeatherNow(
         img: res.value[0].realtime.img,
         temp: res.value[0].realtime.temp,
@@ -64,6 +63,12 @@ class _HomePageState extends State<HomePage> {
         temp_day_c: res.value[0].weathers[0].temp_day_c,
         temp_night_c: res.value[0].weathers[0].temp_night_c);
     return b;
+  }
+
+  List<Weather7DaysInfo> _filterWeekWeather(WeatherRes res) {
+    final list = res.value[0].weathers;
+    list.removeAt(list.length - 1);
+    return list;
   }
 
   @override
@@ -79,6 +84,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    print(MediaQuery.of(context).size.width);
     return ConstrainedBox(
         constraints: BoxConstraints.expand(),
         child: Stack(children: [
@@ -118,12 +124,38 @@ class _HomePageState extends State<HomePage> {
                   Info(info: this.info),
                   // 底部天气图标
                   Container(
-                    height: 350,
-                    child: Container(
-                        margin: EdgeInsets.fromLTRB(0, 0, 0, 30),
-                        // height: MediaQuery.of(context).size.height / 2,
-                        width: MediaQuery.of(context).size.width * 1.0,
-                        child: WeatherChart()),
+                    height: 220,
+                    margin: EdgeInsets.fromLTRB(0, 0, 0, 30),
+                    child: Column(
+                      children: <Widget>[
+                        Container(
+                          height: 200,
+                          child: Container(
+                              // height: MediaQuery.of(context).size.height / 2,
+                              width: MediaQuery.of(context).size.width * 1,
+                              child: WeatherChart(
+                                weather: this.weather7daysInfo,
+                              )),
+                        ),
+                        Container(
+                          width: MediaQuery.of(context).size.width * 0.75,
+                          child: Flex(
+                            direction: Axis.horizontal,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: this.weather7daysInfo == null
+                                ? []
+                                : this
+                                    .weather7daysInfo
+                                    .map((_) => Image.asset(
+                                          'images/${_.img}.png',
+                                          width: 20,
+                                          height: 20,
+                                        ))
+                                    .toList(),
+                          ),
+                        )
+                      ],
+                    ),
                   )
                 ],
               )),
@@ -137,50 +169,3 @@ class _HomePageState extends State<HomePage> {
         ]));
   }
 }
-
-// class HomePage extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     return Container(
-//         decoration: new BoxDecoration(
-//             gradient: const LinearGradient(begin: Alignment.topRight, stops: [
-//           .5,
-//           .8,
-//           1.0
-//         ], colors: [
-//           Color(0xFF36749d),
-//           Color(0xFF5aa9b8),
-//           Color(0xFF76b9b2)
-//         ])),
-//         child: Column(
-//           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//           crossAxisAlignment: CrossAxisAlignment.center,
-//           mainAxisSize: MainAxisSize.max,
-//           children: <Widget>[
-//             Container(
-//               height: 100,
-//               alignment: Alignment.center,
-//               color: Color.fromRGBO(255, 255, 255, .5),
-//               child: Text('杭州市',
-//                   textAlign: TextAlign.center,
-//                   style: new TextStyle(
-//                       color: Colors.white,
-//                       fontSize: 24.0,
-//                       fontWeight: FontWeight.w100,
-//                       decoration: TextDecoration.none)),
-//             ),
-//             // 实时天气信息
-//             Info(),
-//             // 底部天气图标
-//             Container(
-//               height: 350,
-//               child: Container(
-//                   margin: EdgeInsets.fromLTRB(0, 0, 0, 30),
-//                   // height: MediaQuery.of(context).size.height / 2,
-//                   width: MediaQuery.of(context).size.width * 1.0,
-//                   child: WeatherChart()),
-//             )
-//           ],
-//         ));
-//   }
-// }
