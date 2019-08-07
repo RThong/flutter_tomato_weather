@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'chart.dart';
 import 'net/api.dart';
-
 import 'info.dart';
+import 'city_select.dart';
 import 'package:flutter_study/models/weather.dart';
+import 'package:amap_location/amap_location.dart';
 
 void main() {
   runApp(new MyApp());
@@ -31,6 +32,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  num areaid = 101210101;
+
   // WeatherInfo realTimeInfo;
   WeatherNow info;
   List<Weather7DaysInfo> weather7daysInfo;
@@ -40,8 +43,9 @@ class _HomePageState extends State<HomePage> {
   bool isLoading = true;
 
   Future<Null> _getWeather() async {
-    // WeatherRes res = await getWeather();
-    var weatherJson = await getWeather();
+    print('获取数据$areaid');
+
+    var weatherJson = await getWeather(areaid: this.areaid);
     WeatherRes weather = new WeatherRes.fromJson(weatherJson);
 
     setState(() {
@@ -76,16 +80,25 @@ class _HomePageState extends State<HomePage> {
     this._getWeather();
   }
 
+  _fn() async {
+    await AMapLocationClient.startup(new AMapLocationOption(
+        desiredAccuracy: CLLocationAccuracy.kCLLocationAccuracyHundredMeters));
+    var a = await AMapLocationClient.getLocation(true);
+    print('获取定位$a');
+  }
+
   @override
   void initState() {
     print('homepage');
+
+    _fn();
     _getWeather();
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    print(MediaQuery.of(context).size.width);
+    // print(MediaQuery.of(context).size.width);
     return new RefreshIndicator(
         key: _refreshIndicatorKey,
         onRefresh: this._refresh,
@@ -95,13 +108,14 @@ class _HomePageState extends State<HomePage> {
             child: GestureDetector(
                 onVerticalDragStart: (DragStartDetails e) {
                   //打印手指按下的位置(相对于屏幕)
-                  print("用户手指按下：${e.globalPosition}");
+                  // print("用户手指按下：${e.globalPosition}");
                 },
                 //手指滑动时会触发此回调
                 onVerticalDragUpdate: (DragUpdateDetails e) {
-                  print('正在滑动');
+                  // print('正在滑动');
                 },
                 onVerticalDragEnd: (DragEndDetails e) {
+                  // print(e.velocity);
                   //打印滑动结束时在x、y轴上的速度
                   //竖直速度大于0表示向下滑动就显示refreshIndicator，并获取数据
                   if (e.velocity.pixelsPerSecond.dy > 0) {
@@ -128,19 +142,13 @@ class _HomePageState extends State<HomePage> {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         mainAxisSize: MainAxisSize.max,
                         children: <Widget>[
-                          // 顶部操作栏
-                          Container(
-                            height: 100,
-                            alignment: Alignment.center,
-                            // color: Color.fromRGBO(255, 255, 255, .5),
-                            child: Text('杭州市',
-                                textAlign: TextAlign.center,
-                                style: new TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 24.0,
-                                    fontWeight: FontWeight.w100,
-                                    decoration: TextDecoration.none)),
-                          ),
+                          // 顶部城市选择区域
+                          CitySelect(onCityChange: (num areaid) {
+                            print('change city: $areaid');
+                            // 先将最新的areaid保存  再通过refresh中的setstate进行重新渲染
+                            this.areaid = areaid;
+                            this._refreshIndicatorKey.currentState.show();
+                          }),
                           // 实时天气信息
                           Info(info: this.info),
                           // 底部天气图标
