@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:city_picker/city_picker.dart';
+import 'package:amap_location/amap_location.dart';
+import 'package:simple_permissions/simple_permissions.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 import 'utils/city.dart';
 
 class CitySelect extends StatefulWidget {
@@ -22,7 +25,7 @@ class _CitySelectState extends State<CitySelect> {
     }
 
     City selectedCity =
-        _getCityId(result?.province, result?.city, result?.county);
+        _getCity(result?.province, result?.city, result?.county);
 
     widget.onCityChange(selectedCity.areaid);
 
@@ -32,7 +35,76 @@ class _CitySelectState extends State<CitySelect> {
     });
   }
 
-  City _getCityId(String province, String city, String county) {
+  String getLocationStr(AMapLocation loc) {
+    if (loc == null) {
+      return "正在定位";
+    }
+
+    if (loc.isSuccess()) {
+      if (loc.hasAddress()) {
+        return "定位成功: \n时间${loc.timestamp}\n经纬度:${loc.latitude} ${loc.longitude}\n 区:${loc.district} 城市:${loc.city} 省:${loc.province}";
+      } else {
+        return "定位成功: \n时间${loc.timestamp}\n经纬度:${loc.latitude} ${loc.longitude}\n ";
+      }
+    } else {
+      return "定位失败: \n错误:{code=${loc.code},description=${loc.description}";
+    }
+  }
+
+  /**
+   * 获取定位权限
+   */
+  void _checkPersmission() async {
+    bool hasPermission =
+        await SimplePermissions.checkPermission(Permission.WhenInUseLocation);
+    if (!hasPermission) {
+      PermissionStatus requestPermissionResult =
+          await SimplePermissions.requestPermission(
+              Permission.WhenInUseLocation);
+      if (requestPermissionResult == PermissionStatus.denied) {
+        Alert(context: context, title: "申请定位权限失败", desc: "Flutter is awesome.")
+            .show();
+
+        return;
+      }
+    }
+    // AMapLocationClient.onLocationUpate.listen((AMapLocation loc) {
+    //   if (!mounted) return;
+    //   // print(getLocationStr(loc));
+    //   // print('区:${loc.district} 城市:${loc.city} 省:${loc.province}');
+    //   // City a = this._getCity(loc.province, loc.city, loc.district);
+    //   // print('${a.countyname}+++ ${a.areaid}');
+    //   // this.location = '${a.areaid}';
+
+    //   print('##########');
+    //   // setState(() {
+    //   //   this.location = getLocationStr(loc);
+    //   // });
+    // });
+
+    // 直接获取定位信息
+    AMapLocation loc = await AMapLocationClient.getLocation(true);
+    print(loc.district);
+    City res = _getCity(loc.province, loc.city, loc.district);
+    if (res is City) {
+      widget.onCityChange(res.areaid);
+      setState(() {
+        this.cityName = res.countyname;
+      });
+    }
+  }
+
+  // _fn() async {
+  //   await AMapLocationClient.startup(new AMapLocationOption(
+  //       desiredAccuracy: CLLocationAccuracy.kCLLocationAccuracyHundredMeters));
+  //   AMapLocationClient.onLocationUpate.listen((AMapLocation loc) {
+  //     if (!mounted) return;
+  //     print('监听定位');
+  //   });
+  //   AMapLocationClient.startLocation();
+  // }
+
+  City _getCity(String province, String city, String county) {
     print(county);
     //查看county级匹配的城市
     List<City> countyResList =
@@ -46,9 +118,10 @@ class _CitySelectState extends State<CitySelect> {
       List<City> cityResList =
           cityList.where((_) => city.indexOf(_.countyname) == 0).toList();
       if (cityResList.length == 0) {
-        City provinceRes =
-            cityList.firstWhere((_) => province.indexOf(_.countyname) == 0);
-        return provinceRes;
+        List<City> provinceResList =
+            cityList.where((_) => province.indexOf(_.countyname) == 0).toList();
+        // return provinceRes ? provinceRes : null;
+        return provinceResList.length == 0 ? null : provinceResList[0];
       }
       return cityResList[0];
     }
@@ -83,6 +156,23 @@ class _CitySelectState extends State<CitySelect> {
   }
 
   @override
+  void initState() {
+    print('city_select initstate');
+    _checkPersmission();
+    // AMapLocationClient.startLocation();
+
+    // _fn();
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    //注意这里停止监听
+    AMapLocationClient.stopLocation();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Container(
       height: 100,
@@ -96,7 +186,7 @@ class _CitySelectState extends State<CitySelect> {
                 fontSize: 24.0,
                 fontWeight: FontWeight.w100,
                 decoration: TextDecoration.none)),
-        onTap: _showCityPicker, //点击
+        onTap: this._showCityPicker, //点击
       ),
     );
   }

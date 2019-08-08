@@ -7,6 +7,7 @@ import 'package:flutter_study/models/weather.dart';
 import 'package:amap_location/amap_location.dart';
 
 void main() {
+  AMapLocationClient.setApiKey("368dcd68c54be8bbca8de0806da4b6d6");
   runApp(new MyApp());
 }
 
@@ -33,7 +34,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   num areaid = 101210101;
-
   // WeatherInfo realTimeInfo;
   WeatherNow info;
   List<Weather7DaysInfo> weather7daysInfo;
@@ -80,18 +80,11 @@ class _HomePageState extends State<HomePage> {
     this._getWeather();
   }
 
-  _fn() async {
-    await AMapLocationClient.startup(new AMapLocationOption(
-        desiredAccuracy: CLLocationAccuracy.kCLLocationAccuracyHundredMeters));
-    var a = await AMapLocationClient.getLocation(true);
-    print('获取定位$a');
-  }
-
   @override
   void initState() {
     print('homepage');
-
-    _fn();
+    AMapLocationClient.startup(new AMapLocationOption(
+        desiredAccuracy: CLLocationAccuracy.kCLLocationAccuracyHundredMeters));
     _getWeather();
     super.initState();
   }
