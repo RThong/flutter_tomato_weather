@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'bg_ani.dart';
 import 'chart.dart';
 import 'net/api.dart';
 import 'info.dart';
@@ -34,8 +35,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   num areaid = 101210101;
-  // WeatherInfo realTimeInfo;
-  WeatherNow info;
+
+  WeatherNow nowWeatherInfo;
   List<Weather7DaysInfo> weather7daysInfo;
   // 获取全局的RefreshIndicator的key
   final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
@@ -50,7 +51,8 @@ class _HomePageState extends State<HomePage> {
 
     setState(() {
       this.isLoading = false;
-      this.info = _filterNowWeather(weather);
+      this.nowWeatherInfo = _filterNowWeather(weather);
+
       this.weather7daysInfo = _filterWeekWeather(weather);
     });
   }
@@ -116,74 +118,84 @@ class _HomePageState extends State<HomePage> {
                   }
                 },
                 child: Stack(children: [
-                  Container(
-                      decoration: new BoxDecoration(
-                          gradient: const LinearGradient(
-                              begin: Alignment.topRight,
-                              stops: [
-                            .5,
-                            .8,
-                            1.0
-                          ],
-                              colors: [
-                            Color(0xFF36749d),
-                            Color(0xFF5aa9b8),
-                            Color(0xFF76b9b2)
-                          ])),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.max,
-                        children: <Widget>[
-                          // 顶部城市选择区域
-                          CitySelect(onCityChange: (num areaid) {
-                            print('change city: $areaid');
-                            // 先将最新的areaid保存  再通过refresh中的setstate进行重新渲染
-                            this.areaid = areaid;
-                            this._refreshIndicatorKey.currentState.show();
-                          }),
-                          // 实时天气信息
-                          Info(info: this.info),
-                          // 底部天气图标
-                          Container(
-                            height: 220,
-                            margin: EdgeInsets.fromLTRB(0, 0, 0, 30),
-                            child: Column(
-                              children: <Widget>[
-                                Container(
-                                  height: 200,
-                                  child: Container(
-                                      // height: MediaQuery.of(context).size.height / 2,
-                                      width:
-                                          MediaQuery.of(context).size.width * 1,
-                                      child: WeatherChart(
-                                        weather: this.weather7daysInfo,
-                                      )),
-                                ),
-                                Container(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.75,
-                                  child: Flex(
-                                    direction: Axis.horizontal,
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: this.weather7daysInfo == null
-                                        ? []
-                                        : this
-                                            .weather7daysInfo
-                                            .map((_) => Image.asset(
-                                                  'images/${_.img}.png',
-                                                  width: 20,
-                                                  height: 20,
-                                                ))
-                                            .toList(),
-                                  ),
-                                )
-                              ],
+                  // 页面背景层
+                  this.nowWeatherInfo == null
+                      ? Container(
+                          child: Image.asset(
+                            'images/sunny_bg.jpg',
+                            width: MediaQuery.of(context).size.width,
+                            height: MediaQuery.of(context).size.height,
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      : int.parse(this.nowWeatherInfo?.img) >= 3
+                          ? Container(
+                              color: Color(0xff6f979f),
+                            )
+                          : Container(
+                              child: Image.asset(
+                                'images/sunny_bg.jpg',
+                                width: MediaQuery.of(context).size.width,
+                                height: MediaQuery.of(context).size.height,
+                                fit: BoxFit.cover,
+                              ),
                             ),
-                          )
-                        ],
-                      )),
+                  //天气效果动画层
+                  BgAni(),
+                  // 主要信息展示层
+                  Container(
+                      child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.max,
+                    children: <Widget>[
+                      // 顶部城市选择区域
+                      CitySelect(onCityChange: (num areaid) {
+                        print('change city: $areaid');
+                        // 先将最新的areaid保存  再通过refresh中的setstate进行重新渲染
+                        // this.areaid = areaid;
+                        // this._refreshIndicatorKey.currentState.show();
+                      }),
+                      // 实时天气信息
+                      Info(info: this.nowWeatherInfo),
+                      // 底部天气图标
+                      Container(
+                        height: 220,
+                        margin: EdgeInsets.fromLTRB(0, 0, 0, 30),
+                        child: Column(
+                          children: <Widget>[
+                            Container(
+                              height: 200,
+                              child: Container(
+                                  // height: MediaQuery.of(context).size.height / 2,
+                                  width: MediaQuery.of(context).size.width * 1,
+                                  child: WeatherChart(
+                                    weather: this.weather7daysInfo,
+                                  )),
+                            ),
+                            Container(
+                              width: MediaQuery.of(context).size.width * 0.75,
+                              child: Flex(
+                                direction: Axis.horizontal,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: this.weather7daysInfo == null
+                                    ? []
+                                    : this
+                                        .weather7daysInfo
+                                        .map((_) => Image.asset(
+                                              'images/${_.img}.png',
+                                              width: 20,
+                                              height: 20,
+                                            ))
+                                        .toList(),
+                              ),
+                            )
+                          ],
+                        ),
+                      )
+                    ],
+                  )),
                   // 通过isLoading状态来切换没有大小的container来显隐加载动画
                   this.isLoading
                       ? Container(color: Color.fromRGBO(255, 255, 255, .5))
