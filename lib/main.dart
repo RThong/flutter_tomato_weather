@@ -45,7 +45,6 @@ class _HomePageState extends State<HomePage> {
 
   Future<Null> _getWeather() async {
     print('获取数据$areaid');
-
     var weatherJson = await getWeather(areaid: this.areaid);
     WeatherRes weather = new WeatherRes.fromJson(weatherJson);
 
@@ -128,7 +127,7 @@ class _HomePageState extends State<HomePage> {
                             fit: BoxFit.cover,
                           ),
                         )
-                      : int.parse(this.nowWeatherInfo?.img) >= 3
+                      : int.parse(this.nowWeatherInfo?.img) >= 2
                           ? Container(
                               color: Color(0xff6f979f),
                             )
@@ -141,7 +140,21 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ),
                   //天气效果动画层
-                  BgAni(),
+                  nowWeatherInfo == null
+                      ? BgAni()
+                      : BgAni(
+                          weatherNum: int.parse(nowWeatherInfo.img),
+                        ),
+                  Positioned(
+                      top: 35,
+                      right: 30,
+                      child: Text(
+                          '${DateTime.now().hour}:${DateTime.now().minute}更新',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12.0,
+                              fontWeight: FontWeight.w100,
+                              decoration: TextDecoration.none))),
                   // 主要信息展示层
                   Container(
                       child: Column(
@@ -153,8 +166,8 @@ class _HomePageState extends State<HomePage> {
                       CitySelect(onCityChange: (num areaid) {
                         print('change city: $areaid');
                         // 先将最新的areaid保存  再通过refresh中的setstate进行重新渲染
-                        // this.areaid = areaid;
-                        // this._refreshIndicatorKey.currentState.show();
+                        this.areaid = areaid;
+                        this._refreshIndicatorKey.currentState.show();
                       }),
                       // 实时天气信息
                       Info(info: this.nowWeatherInfo),
@@ -198,7 +211,14 @@ class _HomePageState extends State<HomePage> {
                   )),
                   // 通过isLoading状态来切换没有大小的container来显隐加载动画
                   this.isLoading
-                      ? Container(color: Color.fromRGBO(255, 255, 255, .5))
+                      ? Container(
+                          child: Image.asset(
+                            'images/sunny_bg.jpg',
+                            width: MediaQuery.of(context).size.width,
+                            height: MediaQuery.of(context).size.height,
+                            fit: BoxFit.cover,
+                          ),
+                        )
                       : Container(
                           width: 0,
                           height: 0,
