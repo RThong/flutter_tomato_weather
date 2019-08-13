@@ -149,7 +149,7 @@ class _HomePageState extends State<HomePage> {
                       top: 35,
                       right: 30,
                       child: Text(
-                          '${DateTime.now().hour}:${DateTime.now().minute}更新',
+                          '${DateTime.now().hour}:${DateTime.now().minute.toString().padRight(2, '0')}更新',
                           style: TextStyle(
                               color: Colors.white,
                               fontSize: 12.0,
