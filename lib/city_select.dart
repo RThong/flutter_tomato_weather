@@ -15,7 +15,7 @@ class CitySelect extends StatefulWidget {
 }
 
 class _CitySelectState extends State<CitySelect> {
-  String cityName = '123';
+  String cityName = '未定位';
 
   void _showCityPicker() async {
     CityResult result = await showCityPicker(context, initCity: CityResult());
