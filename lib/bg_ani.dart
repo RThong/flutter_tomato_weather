@@ -19,10 +19,18 @@ class BgAni extends StatelessWidget {
                 ? Container(
                     height: MediaQuery.of(context).size.height / 2,
                     child: AnimationContainer(
-                      width: MediaQuery.of(context).size.width,
-                      height: MediaQuery.of(context).size.height,
-                    ),
+                        width: MediaQuery.of(context).size.width,
+                        height: MediaQuery.of(context).size.height,
+                        aniMode: AniMode.rain),
                   )
-                : Container(width: 0, height: 0);
+                : this.weatherNum >= 13 && this.weatherNum <= 18
+                    ? Container(
+                        height: MediaQuery.of(context).size.height / 2,
+                        child: AnimationContainer(
+                            width: MediaQuery.of(context).size.width,
+                            height: MediaQuery.of(context).size.height / 2,
+                            aniMode: AniMode.snow),
+                      )
+                    : Container(width: 0, height: 0);
   }
 }
