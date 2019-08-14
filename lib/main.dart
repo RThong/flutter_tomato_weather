@@ -141,7 +141,7 @@ class _HomePageState extends State<HomePage> {
                             ),
                   //天气效果动画层
                   nowWeatherInfo == null
-                      ? BgAni()
+                      ? Container(width: 0, height: 0)
                       : BgAni(
                           weatherNum: int.parse(nowWeatherInfo.img),
                         ),
