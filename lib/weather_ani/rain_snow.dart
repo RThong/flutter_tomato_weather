@@ -2,17 +2,21 @@ import 'package:flutter/animation.dart';
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
+enum AniMode { rain, snow }
+
 class AnimationContainer extends StatefulWidget {
   double width;
   double height;
-  AnimationContainer({this.width, this.height});
+  AniMode aniMode;
+  AnimationContainer({this.width, this.height, this.aniMode});
   @override
   _AnimationContainerState createState() => _AnimationContainerState();
 }
 
 class _AnimationContainerState extends State<AnimationContainer> {
   List<RainAni> rainList = [];
-  int WIDGET_COUNT = 15;
+  int WIDGET_COUNT = 10;
+  bool isInit = true;
   @override
   Widget build(BuildContext context) {
     return Stack(children: this.rainList);
@@ -23,7 +27,10 @@ class _AnimationContainerState extends State<AnimationContainer> {
         width: widget.width,
         height: widget.height,
         key: ValueKey(math.Random().nextDouble()),
+        isInit: this.isInit,
+        aniMode: widget.aniMode,
         onComplete: () {
+          this.isInit = false;
           setState(() {
             this.rainList[index] = _createRainAni(index);
           });
@@ -47,8 +54,18 @@ class RainAni extends StatefulWidget {
   var onComplete;
   double width;
   double height;
+  AniMode aniMode;
 
-  RainAni({this.onComplete, this.key, this.width, this.height});
+  bool
+      isInit; // 判断是否是初始化的rainAni数组，初始化的高度在-400范围内随机，非初始化的高度为0，执行动画完成回调就赋值为false
+
+  RainAni(
+      {this.onComplete,
+      this.key,
+      this.width,
+      this.height,
+      this.isInit,
+      this.aniMode});
 
   _RainAniState createState() => new _RainAniState();
 }
@@ -56,19 +73,23 @@ class RainAni extends StatefulWidget {
 class _RainAniState extends State<RainAni> with SingleTickerProviderStateMixin {
   Animation<double> animation;
   AnimationController controller;
-  double test;
+  double left;
 
   initState() {
-    this.test = new math.Random().nextDouble() * widget.width;
+    this.left = new math.Random().nextDouble() * widget.width;
     super.initState();
     controller = new AnimationController(
-        duration:
-            Duration(milliseconds: new math.Random().nextInt(2000) + 3000),
+        duration: Duration(seconds: new math.Random().nextInt(3) + 4),
         vsync: this);
-    animation = new Tween(begin: -100.0, end: widget.height).animate(controller)
-      ..addListener(() {
-        setState(() {});
-      });
+    animation = new Tween(
+            begin: widget.isInit
+                ? -math.Random().nextDouble() * widget.height
+                : 0.0,
+            end: widget.height)
+        .animate(controller)
+          ..addListener(() {
+            setState(() {});
+          });
     animation.addStatusListener((state) {
       if (state == AnimationStatus.completed) {
         widget.onComplete();
@@ -78,15 +99,27 @@ class _RainAniState extends State<RainAni> with SingleTickerProviderStateMixin {
   }
 
   Widget build(BuildContext context) {
-    return Positioned(
-      top: animation.value,
-      left: this.test,
-      child: Container(
-        width: .5,
-        height: 20,
-        color: Colors.white,
-      ),
-    );
+    return widget.aniMode == AniMode.rain
+        ? Positioned(
+            top: animation.value,
+            left: this.left,
+            child: Container(
+              width: .5,
+              height: 20,
+              color: Colors.white,
+            ),
+          )
+        : Positioned(
+            top: animation.value,
+            left: this.left,
+            child: Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(5.0),
+                  color: Colors.white70),
+            ),
+          );
   }
 
   dispose() {
